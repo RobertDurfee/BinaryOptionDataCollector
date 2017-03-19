@@ -25,8 +25,6 @@ while True:
         cnx.commit()
         cursor.close()
 
-        print element['lt'] + ' ' + element['e'] + ":" + element['t'] + ' ' + element['l']
-
     time.sleep(60)
 
 cnx.close()
