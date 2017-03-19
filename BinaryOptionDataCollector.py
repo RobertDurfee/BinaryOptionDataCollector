@@ -21,9 +21,6 @@ while True:
     for element in data:
 
         cursor = cnx.cursor()
-
-        print ("INSERT INTO `" + element['e'] + ":" + element["t"] + "` (`DateTime`, `Price`) VALUES ({}, {})").format(time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(element["lt_dts"], "%Y-%m-%dT%H:%M:%SZ")), element["l"].replace(",", ""))
-
         cursor.execute("INSERT INTO `" + element['e'] + ":" + element["t"] + "` (`DateTime`, `Price`) VALUES (%s, %s)", (time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(element["lt_dts"], "%Y-%m-%dT%H:%M:%SZ")), element["l"].replace(",", "")))
         cnx.commit()
         cursor.close()
