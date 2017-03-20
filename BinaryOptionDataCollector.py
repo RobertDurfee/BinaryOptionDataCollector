@@ -20,9 +20,24 @@ while True:
 
     for element in data:
 
-        cursor = cnx.cursor()
-        cursor.execute("INSERT INTO `" + element['e'] + ":" + element["t"] + "` (`DateTime`, `Price`) VALUES (%s, %s)", (time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(element["lt_dts"], "%Y-%m-%dT%H:%M:%SZ")), element["l"].replace(",", "")))
-        cnx.commit()
+        formattedDate = time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(element["lt_dts"], "%Y-%m-%dT%H:%M:%SZ")) # Reformat date
+        tableName = element['e'] + ":" + element["t"] # Concatenate exchange and ticker for table name
+        value = element["l"].replace(",", "") # Remove comma from price
+
+        cursor = cnx.cursor(buffered=True)
+        cursor.execute("SELECT * FROM BinaryOptionData.`" + tableName + "` WHERE `DateTime` = '" + formattedDate + "'")
+
+        if cursor.rowcount == 0:
+
+            print "Inserted: " + formattedDate + " " + tableName + " " + value
+
+            cursor.execute("INSERT INTO `" + tableName + "` (`DateTime`, `Price`) VALUES (%s, %s)", (formattedDate, value))
+            cnx.commit()
+
+        else:
+
+            print "Repeat: " + formattedDate + " " + tableName + " " + value
+
         cursor.close()
 
     time.sleep(60)
