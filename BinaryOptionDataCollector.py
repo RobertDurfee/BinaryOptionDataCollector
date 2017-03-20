@@ -2,10 +2,26 @@ import urllib2
 import json
 import mysql.connector
 import time
+import datetime
 
 url = 'http://finance.google.com/finance/info?q=INDEXDJX:.DJI,INDEXSP:.INX,INDEXNASDAQ:.IXIC,INDEXRUSSELL:RUT,INDEXFTSE:XIN0,INDEXFTSE:UKX,INDEXFTSE:WIDEU,INDEXFTSE:JAPAN,CURRENCY:EURUSD,CURRENCY:GBPUSD,CURRENCY:USDJPY,CURRENCY:EURJPY,CURRENCY:AUDUSD,CURRENCY:USDCAD,CURRENCY:GBPJPY,CURRENCY:USDCHF,CURRENCY:EURGBP,CURRENCY:AUDJPY'
 
 cnx = mysql.connector.connect(user='<CENSORED>', password='<CENSORED>', host='<CENSORED>', database='BinaryOptionData')
+
+lastAddedDateTime = { 'INDEXDJX:.DJI':'', 'INDEXSP:.INX':'', 'INDEXNASDAQ:.IXIC':'', 'INDEXRUSSELL:RUT':'', 'INDEXFTSE:XIN0':'', 'INDEXFTSE:UKX':'', 'INDEXFTSE:WIDEU':'', 'INDEXFTSE:JAPAN':'', 'CURRENCY:EURUSD':'', 'CURRENCY:GBPUSD':'', 'CURRENCY:USDJPY':'', 'CURRENCY:EURJPY':'', 'CURRENCY:AUDUSD':'', 'CURRENCY:USDCAD':'', 'CURRENCY:GBPJPY':'', 'CURRENCY:USDCHF':'', 'CURRENCY:EURGBP':'', 'CURRENCY:AUDJPY':'' }
+
+# Initialize last added datetimes
+for tableName in lastAddedDateTime:
+
+    cursor = cnx.cursor()
+
+    cursor.execute("SELECT `DateTime` FROM BinaryOptionData.`" + tableName + "` WHERE `ID` = (SELECT MAX(ID) FROM `" + tableName + "`)")
+
+    for (dateTime,) in cursor:
+
+        lastAddedDateTime[tableName] = dateTime.strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.close()
 
 while True:
 
@@ -24,19 +40,14 @@ while True:
         tableName = element['e'] + ":" + element["t"] # Concatenate exchange and ticker for table name
         value = element["l"].replace(",", "") # Remove comma from price
 
-        cursor = cnx.cursor(buffered=True)
-        cursor.execute("SELECT * FROM BinaryOptionData.`" + tableName + "` WHERE `DateTime` = '" + formattedDate + "'")
-
-        if cursor.rowcount == 0:
-
-            print "Inserted: " + formattedDate + " " + tableName + " " + value
+        cursor = cnx.cursor()
+        
+        if lastAddedDateTime[tableName] != formattedDate:
 
             cursor.execute("INSERT INTO `" + tableName + "` (`DateTime`, `Price`) VALUES (%s, %s)", (formattedDate, value))
             cnx.commit()
-
-        else:
-
-            print "Repeat: " + formattedDate + " " + tableName + " " + value
+            
+            lastAddedDateTime[tableName] = formattedDate
 
         cursor.close()
 
