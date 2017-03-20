@@ -13,9 +13,10 @@ lastAddedDateTime = { 'INDEXDJX:.DJI':'', 'INDEXSP:.INX':'', 'INDEXNASDAQ:.IXIC'
 # Initialize last added datetimes
 for tableName in lastAddedDateTime:
 
+    query = "SELECT `DateTime` FROM BinaryOptionData.`" + tableName + "` WHERE `ID` = (SELECT MAX(ID) FROM `" + tableName + "`)"
+    
     cursor = cnx.cursor()
-
-    cursor.execute("SELECT `DateTime` FROM BinaryOptionData.`" + tableName + "` WHERE `ID` = (SELECT MAX(ID) FROM `" + tableName + "`)")
+    cursor.execute(query)
 
     for (dateTime,) in cursor:
 
@@ -39,17 +40,17 @@ while True:
         formattedDate = time.strftime("%Y-%m-%d %H:%M:%S", time.strptime(element["lt_dts"], "%Y-%m-%dT%H:%M:%SZ")) # Reformat date
         tableName = element['e'] + ":" + element["t"] # Concatenate exchange and ticker for table name
         value = element["l"].replace(",", "") # Remove comma from price
-
-        cursor = cnx.cursor()
         
         if lastAddedDateTime[tableName] != formattedDate:
 
-            cursor.execute("INSERT INTO `" + tableName + "` (`DateTime`, `Price`) VALUES (%s, %s)", (formattedDate, value))
+            query = "INSERT INTO `" + tableName + "` (`DateTime`, `Price`) VALUES (%s, %s)"
+            
+            cursor = cnx.cursor()
+            cursor.execute(query, (formattedDate, value))
             cnx.commit()
+            cursor.close()
             
             lastAddedDateTime[tableName] = formattedDate
-
-        cursor.close()
 
     time.sleep(60)
 
