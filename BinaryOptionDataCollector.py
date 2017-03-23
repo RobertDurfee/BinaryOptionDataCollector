@@ -69,6 +69,6 @@ while True:
 
         cnx.close()
 
-    except:
+    except mySQLConnectionError:
 
         continue
