@@ -65,7 +65,7 @@ while True:
 
                     lastAddedDateTime[tableName] = formattedDate
 
-            time.sleep(60)
+            time.sleep(60)  # Do not remove this! Your IP will be blocked.
 
         cnx.close()
 
